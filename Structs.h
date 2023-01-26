@@ -2,50 +2,49 @@
 
 typedef struct
 {
-	int x;	// Позиція по осі Х (стовпець)
-	int y;	// Позиція по осі Y (рядок)
+	int x;	// X-axis position (column)
+	int y;	// Y-axis position (row)
 
 }Position;
 
 typedef struct Stats
 {
 public:
-	int dmg;	// Урон 
-	int hp;		// Очки життя
-	int maxHp;	// Максимальна к-ість очків життя
-	int lvl;	// Рівень
-	int xp;		// Очки досвіду
-	int maxXp;	// Максимальна к-ість очків досвіду
+	int dmg;	
+	int hp;		
+	int maxHp;	
+	int lvl;	
+	int xp;		
+	int maxXp;	
 }Stats;
 
 struct Player
 {
-	int foodCount;	// Лічильник їжі (трохи згодом їжа буде відновлювати очки життя)
-	Position pos;	// Ініціалізація вкладенної структури
-	Stats stats;	// Ініціалізація вкладенної структури
+	int foodCount;	
+	Position pos;	
+	Stats stats;	
 } link;
 
 struct Enemy
 {
-	char type;		// Символ ворога
-	Position pos;	// Ініціалізація вкладенної структури
-	Stats stats;	// Ініціалізація вкладенної структури
-	//Enemy* next;	// Вказівник на наступного ворога (можливо заміню на масив)
-} enemy[4];
+	char type;		// Enemy symbol
+	Position pos;	
+	Stats stats;	
+} enemy[16];
 
 struct Map
 {
-	char** map;				// Масив для мапи
-	int mapRowSize = 0;		// Розмір мари по осі Y (рядках)
-	int mapColSize = 0;		// Розмір мари по осі Х (стовпцях)
+	char** map;				// Map array
+	int mapRowSize = 0;		// Y-axis size (row)
+	int mapColSize = 0;		// X-axis size (column)
 }pointOnMap;
 
-struct DinamicMapSizes	// Ця структура зроблена для імітації того, що персонаж підсвітлює собі шлях смолоскипом
+struct MapSizes			// Ця структура зроблена для імітації того, що персонаж підсвітлює собі шлях смолоскипом
 {
-	int rowMin = 0;		// Мінімальні координати точок по осі Y, що бачить гравець
-	int colMin = 0;		// Мінімальні координати точок по осі Х, що бачить гравець
-	int rowMax;			// Максимальні координати точок по осі Y, що бачить гравець
-	int colMax;			// Максимальні координати точок по осі Х, що бачить гравець
+	int minRow = 0;		// Мінімальні координати точок по осі Y, що бачить гравець
+	int minCol = 0;		// Мінімальні координати точок по осі Х, що бачить гравець
+	int maxRow;			// Максимальні координати точок по осі Y, що бачить гравець
+	int maxCol;			// Максимальні координати точок по осі Х, що бачить гравець
 }newMapSize;
 
 /* Створення мапи */
