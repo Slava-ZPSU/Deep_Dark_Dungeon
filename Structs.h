@@ -39,23 +39,23 @@ struct Map
 	int mapColSize = 0;		// X-axis size (column)
 }pointOnMap;
 
-struct MapSizes			// Ця структура зроблена для імітації того, що персонаж підсвітлює собі шлях смолоскипом
+struct MapSizes			// This structure is made to simulate the character lighting his way with a torch
 {
-	int minRow = 0;		// Мінімальні координати точок по осі Y, що бачить гравець
-	int minCol = 0;		// Мінімальні координати точок по осі Х, що бачить гравець
-	int maxRow;			// Максимальні координати точок по осі Y, що бачить гравець
-	int maxCol;			// Максимальні координати точок по осі Х, що бачить гравець
+	int minRow = 0;		// The minimum Y-axis coordinates of the points that the player can see
+	int minCol = 0;		// The minimum coordinates of the points on the X axis that the player can see
+	int maxRow;			// The maximum coordinates of the points along the Y axis that the player can see
+	int maxCol;			// The maximum coordinates of the points on the X axis that the player can see
 }newMapSize;
 
-/* Створення мапи */
-void SetDefaultMapSizes();		// Функція для визначення розмірів мапи
-void CreateMap();				// Функція для створення динамічного масиву
-void FillMap();					// Функція що записує мапу з файла в двовимірний масив мапи
-/* Ігровий процес */
-void GamePlayProcessing();			// Основна функція
-void MovePlayer(char movement);		// Функція пересування персонажа
-void PrintMap();					// Функцція Виводу
-void SetPlayerVision();				// Функція зміни області видимості персонажа
-void DyeingSymbols(int i, int j);	// Функція фарбування символів
-void SetObjectParameters();			// Функція де створюються об'єкти структур
-void MoveEnemy();
+/* Creating map */
+void SetDefaultMapSizes();		// Function for determining map dimensions
+void CreateMap();				// Function for creating a dynamic array for a map
+void FillMap();					// Function that writes a map from a file into a two-dimensional map array
+/* Gameplay */
+void GamePlayProcessing();			// Main function
+void MovePlayer(char movement);		// Player move function
+void PrintMap();					// Output function
+void SetPlayerVision();				// The function of changing the field of view of the character
+void DyeingSymbols(int i, int j);	// Character coloring function
+void SetObjectParameters();			// Function where structure objects are created
+void MoveEnemy();					// Enemy move function

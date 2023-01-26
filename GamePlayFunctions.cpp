@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <malloc.h>
 #include <conio.h>
+#include <math.h>
 #include "Structs.h"
 
 int main()
@@ -229,22 +230,23 @@ void SetObjectParameters()
 void MoveEnemy()
 {
 	for (int i = 0; i < 16; i++) {
+		if (fabs(link.pos.x - enemy[i].pos.x < 5) && fabs(link.pos.y - enemy[i].pos.y < 5)) {
+			
+			pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = '.';
 
-		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = '.';
-
-		if (enemy[i].pos.x < link.pos.x && pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '.') {
-			enemy[i].pos.x++;
+			if (enemy[i].pos.x < link.pos.x && pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '.') {
+				enemy[i].pos.x++;
+			}
+			else if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.') {
+				enemy[i].pos.y++;
+			}
+			else if (enemy[i].pos.x > link.pos.x && pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x - 1] == '.') {
+				enemy[i].pos.x--;
+			}
+			else if (enemy[i].pos.y > link.pos.y && pointOnMap.map[enemy[i].pos.y - 1][enemy[i].pos.x] == '.') {
+				enemy[i].pos.y--;
+			}
+			pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = enemy[i].type;
 		}
-		else if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.') {
-			enemy[i].pos.y++;
-		}
-		else if (enemy[i].pos.x > link.pos.x && pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x - 1] == '.') {
-			enemy[i].pos.x--;
-		}
-		else if (enemy[i].pos.y > link.pos.y && pointOnMap.map[enemy[i].pos.y - 1][enemy[i].pos.x] == '.') {
-			enemy[i].pos.y--;
-		}
-
-		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = enemy[i].type;
 	}
 }
