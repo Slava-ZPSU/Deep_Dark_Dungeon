@@ -12,10 +12,10 @@
 int main()
 {
 	srand(time(NULL));
-	
+
 	//TittleArt();
 	//system("pause");
-	
+
 	SetDefaultMapSizes(); // Creating map
 
 	GamePlayProcessing(); // Gameplay
@@ -30,11 +30,11 @@ void SetDefaultMapSizes()
 {
 	char ch;	// A variable that is needed to accurately count the number of rows and columns
 	FILE* fp = fopen("DungeonMap.txt", "r");
-	
+
 	/* Integrity check */
-	if (fp == NULL) {							
-		printf("Error opening file\n");			
-		exit(1);								
+	if (fp == NULL) {
+		printf("Error opening file\n");
+		exit(1);
 	}
 
 	/* The process of calculating map dimensions */
@@ -45,8 +45,8 @@ void SetDefaultMapSizes()
 			pointOnMap.mapColSize = 1;
 		}
 	}
-	
-	fclose(fp);	
+
+	fclose(fp);
 	CreateMap();	// Creating array
 }
 void CreateMap()
@@ -59,7 +59,7 @@ void CreateMap()
 }
 void FillMap()
 {
-	FILE* fp = fopen("DungeonMap.txt", "r");	
+	FILE* fp = fopen("DungeonMap.txt", "r");
 
 	/* Integrity check */
 	if (fp == NULL) {
@@ -89,7 +89,7 @@ void GamePlayProcessing()
 	do
 	{
 		SystemOfLevelUps();
-		
+
 		system("cls");
 		PrintMap();
 
@@ -109,7 +109,7 @@ void SetObjectParameters()
 
 	/* Player */
 	link = { 1, 35, 13, 5, 10, 10, 1, 0 };
-	
+
 	/* Enemys */
 	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
 		for (int j = 0; j < pointOnMap.mapColSize; j++) {
@@ -119,7 +119,7 @@ void SetObjectParameters()
 					dmg = 4;
 					hp = 40;
 					xp = 20;
-				}	
+				}
 				else if (pointOnMap.map[i][j] == 'S') {
 					type = 'S';
 					dmg = 2;
@@ -143,7 +143,7 @@ void SetObjectParameters()
 					dmg = 10;
 					hp = 100;
 				}
-				
+
 				enemy[id] = { type, j, i, dmg, hp };
 				enemy[id].stats.xp = xp;
 				id++;
@@ -195,7 +195,7 @@ void SetPlayerVision()
 void PrintMap()
 {
 	/* I transfer the maximum map size to the structure fields, which reduces the player's visibility */
-	newMapSize.maxRow = pointOnMap.mapRowSize;		
+	newMapSize.maxRow = pointOnMap.mapRowSize;
 	newMapSize.maxCol = pointOnMap.mapColSize;
 
 	//SetPlayerVision();	// Change the character's viewport
@@ -298,7 +298,7 @@ void MoveEnemy()
 
 		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = '.';
 
-		if ( sqrt(dx*dx + dy*dy) <= enemyRadius) {	
+		if ( sqrt(dx*dx + dy*dy) <= enemyRadius) {
 			if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.' || pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '@') {
 				enemy[i].pos.y++;
 			}
@@ -312,13 +312,13 @@ void MoveEnemy()
 				enemy[i].pos.x--;
 			}
 		}
-		
+
 		if (enemy[i].pos.x == link.pos.x && enemy[i].pos.y == link.pos.y) {
 			AttackEnemy(i);
 			enemy[i].pos.x = col;
 			enemy[i].pos.y = row;
 		}
-		
+
 		enemyCount = DeathEnemy(i, enemyCount);
 
 		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = enemy[i].type;
