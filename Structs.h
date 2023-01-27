@@ -9,18 +9,16 @@ typedef struct
 
 typedef struct Stats
 {
-public:
 	int dmg;	
 	int hp;		
 	int maxHp;	
 	int lvl;	
 	int xp;		
-	int maxXp;	
 }Stats;
 
 struct Player
 {
-	int foodCount;	
+	int countFood;	
 	Position pos;	
 	Stats stats;	
 } link;
@@ -30,7 +28,7 @@ struct Enemy
 	char type;		// Enemy symbol
 	Position pos;	
 	Stats stats;	
-} enemy[16];
+} enemy[17];
 
 struct Map
 {
@@ -59,3 +57,9 @@ void SetPlayerVision();				// The function of changing the field of view of the 
 void DyeingSymbols(int i, int j);	// Character coloring function
 void SetObjectParameters();			// Function where structure objects are created
 void MoveEnemy();					// Enemy move function
+void AttackPlayer(int id);
+void AttackEnemy(int id);
+int DeathPlayer();
+int DeathEnemy(int id, int enemyCount);
+void OpenDoors(int flag);
+void SystemOfLevelUps();
