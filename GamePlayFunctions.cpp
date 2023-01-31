@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
@@ -6,23 +6,18 @@
 #include <conio.h>
 #include <math.h>
 #include <time.h>
+#include <fcntl.h>
+#include <io.h>
 #include "Structs.h"
 #include "Game_Menu.h"
 
 int main()
 {
+	//SetConsoleCP(CP_UTF8);	SetConsoleOutputCP(CP_UTF8);
 	srand(time(NULL));
-	
-	//TittleArt();
-	//system("pause");
-	
-	SetDefaultMapSizes(); // Creating map
 
-	GamePlayProcessing(); // Gameplay
-	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
-		free(pointOnMap.map[i]);
-	}
-	free(pointOnMap.map);
+	GameMenu();
+	free(arrRank);
 	return 0;
 }
 
@@ -33,7 +28,7 @@ void SetDefaultMapSizes()
 	
 	/* Integrity check */
 	if (fp == NULL) {							
-		printf("Error opening file\n");			
+		perror("Error: ");			
 		exit(1);								
 	}
 
@@ -63,7 +58,7 @@ void FillMap()
 
 	/* Integrity check */
 	if (fp == NULL) {
-		printf("Error opening file\n");
+		perror("Error: ");
 		exit(1);
 	}
 
@@ -78,25 +73,48 @@ void FillMap()
 		}
 	}
 	fclose(fp);
+	CreateEnemy();
+}
+void CreateEnemy()
+{
+	for (int i = 0; i < pointOnMap.mapRowSize; i++)
+	{
+		for (int j = 0; j < pointOnMap.mapColSize; j++) {
+			if (pointOnMap.map[i][j] == 'R' || pointOnMap.map[i][j] == 'S' || pointOnMap.map[i][j] == 'K' || pointOnMap.map[i][j] == 'O' || pointOnMap.map[i][j] == 'D') {
+				pointOnMap.countNumberOfEnemy++;
+			}
+		}
+	}
+	enemy = (Enemy*)malloc(pointOnMap.countNumberOfEnemy * sizeof(Enemy));
+}
+
+void ClearScreen()
+{
+	COORD coord;
+	coord.X = 0;
+	coord.Y = 0;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
 void GamePlayProcessing()
-{
+{	
 	int deathFlag = 0;
-
+	SetDefaultMapSizes();
 	SetObjectParameters();	// Creation of objects
 
 	do
 	{
 		SystemOfLevelUps();
 		
-		system("cls");
 		PrintMap();
 
+		ClearScreen();
+	
 		MovePlayer((char)tolower(_getch()));					// Reading the player's direction of movement
 		MoveEnemy();
-		//deathFlag = DeathPlayer();
+		deathFlag = DeathPlayer();
 	} while ((link.pos.y != 14 || link.pos.x != 25) && deathFlag == 0);		// To complete the game, you need to reach the treasures
+	GameOver(deathFlag);
 }
 
 void SetObjectParameters()
@@ -108,7 +126,7 @@ void SetObjectParameters()
 	int xp = NULL;
 
 	/* Player */
-	link = { 1, 35, 13, 5, 10, 10, 1, 0 };
+	link = { 1, 0, 35, 13, 5, 10, 10, 1, 0 };
 	
 	/* Enemys */
 	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
@@ -180,8 +198,11 @@ void DyeingSymbols(int i, int j)
 	else if (pointOnMap.map[i][j] == '#') {
 		SetConsoleTextAttribute(hConsole, 8);
 	}
-	else if (pointOnMap.map[i][j] == ' ') {
-		SetConsoleTextAttribute(hConsole, 15);
+	else if (pointOnMap.map[i][j] == 'F') {
+		printf("\033[0;32m");
+	}
+	else {
+		printf("\033[0;37m");
 	}
 }
 void SetPlayerVision()
@@ -198,23 +219,67 @@ void PrintMap()
 	newMapSize.maxRow = pointOnMap.mapRowSize;		
 	newMapSize.maxCol = pointOnMap.mapColSize;
 
-	//SetPlayerVision();	// Change the character's viewport
+	SetPlayerVision();	// Change the character's viewport
 
 	/* Output map in console */
+	PrintFrameTop(95);
+	PrintFrameSide();
+	if (strcmp(message.mess, "\0") == 1) {
+		printf("\t%-80s\t", message.mess);
+	}
+	else {
+		printf("                                                                                               ");
+	}
+	PrintFrameSide();	printf("\n");
+	PrintFrameBottom(95);
+
+	printf("\t\t\t\t\t");
+	PrintFrameTop(14);
+	printf("\t\t\t\t\t");
 	for (int i = newMapSize.minRow; i < newMapSize.maxRow; i++) {
 		for (int j = newMapSize.minCol; j < newMapSize.maxCol; j++) {
+			if (j == newMapSize.minCol) {
+				PrintFrameSide();
+			}
+
 			DyeingSymbols(i, j);
+
 			printf("%2c", pointOnMap.map[i][j]);
+
+			if (j == newMapSize.maxCol - 1) {
+				PrintFrameSide();
+			}
 		}
-		printf("\n");
+		if (i < newMapSize.maxRow - 1) {
+			printf("\n\033[0;37m\t\t\t\t\t\t\t\t");
+		}
+		else {
+			printf("\n\033[0;37m\t\t\t\t\t");
+		}
 	}
-	printf("\nHP - %d/%d\tDMG - %d\tLVL - %d\tXP - %d\tCOUNT OF FOOD - %d", link.stats.hp, link.stats.maxHp, link.stats.dmg, link.stats.lvl, link.stats.xp, link.countFood);
+
+	PrintFrameBottom(14);
+	
+	PrintFrameTop(95);
+	PrintFrameSide();
+	if (link.stats.hp < 10) {
+		printf("    HP - 0%d/%-6d", link.stats.hp, link.stats.maxHp);
+	}
+	else {
+		printf("    HP - %d/%-6d", link.stats.hp, link.stats.maxHp);
+	}
+	printf("DMG - %-6dLVL - %-6dXP - %-6dCOUNT OF COIN - %-6dCOUNT OF FOOD - %-4d", link.stats.dmg, link.stats.lvl, link.stats.xp, link.countOfCoin, link.countFood);
+	PrintFrameSide();
+	printf("\n");
+	PrintFrameBottom(95);
+	message = { "" };
 }
 void MovePlayer(char movement)
 {
 	int row = link.pos.y;
 	int col = link.pos.x;
-
+	int value = 0;
+	char notice[50];
 	pointOnMap.map[link.pos.y][link.pos.x] = '.';		// The character has moved to a new position, so the floor occupies the previous position
 
 	/* The process of character movement */
@@ -270,9 +335,27 @@ void MovePlayer(char movement)
 
 	if (pointOnMap.map[link.pos.y][link.pos.x] == 'F') {
 		link.countFood++;
+		message = { "You Picked Up The Food" };
 	}
 
-	for (int i = 0; i < 17; i++) {
+	if (pointOnMap.map[link.pos.y][link.pos.x] == 'C') {
+		value = rand() % 3;
+		switch (value) {
+		case 0: 
+			link.countOfCoin += 1;
+			message = { "You Picked Up 1 Coin" };
+			break;
+		case 1:
+			link.countOfCoin += 5;
+			message = { "You Picked Up 5 Coin" };
+			break;
+		case 3:
+			message = { "You Picked Up 10 Coin" };
+			link.countOfCoin += 10;
+		}
+	}
+
+	for (int i = 0; i < pointOnMap.countNumberOfEnemy; i++) {
 		if (link.pos.x == enemy[i].pos.x && link.pos.y == enemy[i].pos.y) {
 			AttackPlayer(i);
 			link.pos.x = col;
@@ -288,9 +371,8 @@ void MoveEnemy()
 	int dy;					// delta row
 	int row;
 	int col;
-	int enemyCount = 17;
 
-	for (int i = 0; i < enemyCount; i++) {
+	for (int i = 0; i < pointOnMap.countNumberOfEnemy; i++) {
 		dx = enemy[i].pos.x - link.pos.x;
 		dy = enemy[i].pos.y - link.pos.y;
 		row = enemy[i].pos.y;
@@ -298,8 +380,8 @@ void MoveEnemy()
 
 		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = '.';
 
-		if ( sqrt(dx*dx + dy*dy) <= enemyRadius) {	
-			if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.' || pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '@') {
+		if (sqrt(dx * dx + dy * dy) <= enemyRadius) {
+			if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.' || pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '@' ) {
 				enemy[i].pos.y++;
 			}
 			else if (enemy[i].pos.x < link.pos.x && pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '.' || pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '@') {
@@ -312,30 +394,62 @@ void MoveEnemy()
 				enemy[i].pos.x--;
 			}
 		}
-		
+		if (pointOnMap.map[enemy[i].pos.y - 1][enemy[i].pos.x] == '=') {
+			enemy[i].pos.y++;
+		}
+		else if (pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '=') {
+			enemy[i].pos.y--;
+		}
+		else if (pointOnMap.map[enemy[i].pos.y ][enemy[i].pos.x - 1] == '=') {
+			enemy[i].pos.x++;
+		}
+		else if (pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '=') {
+			enemy[i].pos.x--;
+		}
 		if (enemy[i].pos.x == link.pos.x && enemy[i].pos.y == link.pos.y) {
 			AttackEnemy(i);
 			enemy[i].pos.x = col;
 			enemy[i].pos.y = row;
 		}
-		
-		enemyCount = DeathEnemy(i, enemyCount);
 
-		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = enemy[i].type;
+		DeathEnemy(i);
+		if (pointOnMap.countNumberOfEnemy > 0) {
+			pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = enemy[i].type;
+		}
 	}
 }
 void AttackPlayer(int id)
 {
 	int chance = rand() % 101; // Chance of a successful attack
-	//if (chance < 51) {
+	if (chance < 51) {
 		enemy[id].stats.hp -= link.stats.dmg;
-	//}
+		if (enemy[id].type == 'R') {
+			message = { "You Hit The Rat" };
+		}
+		else if (enemy[id].type == 'S') {
+			message = { "You Hit The Skeleton" };
+		}
+		else if (enemy[id].type == 'K') {
+			message = { "You Hit The Knight" };
+		}
+		else if (enemy[id].type == 'O') {
+			message = { "You Hit The Ork" };
+		}
+		else {
+			message = { "You Hit The Dragon" };
+		}
+	}
+	else {
+		message = { "You Missed" };
+	}
 }
 void AttackEnemy(int id)
 {
 	int chance = rand() % 101; // Chance of a successful attack
 	if (chance > 49) {
 		link.stats.hp -= enemy[id].stats.dmg;
+		strcat(message.mess, ", And You Get Damage");
+		rank.countResivetHits++;
 	}
 }
 int DeathPlayer()
@@ -345,24 +459,45 @@ int DeathPlayer()
 	}
 	return 0;
 }
-int DeathEnemy(int id, int enemyCount)
+void DeathEnemy(int id)
 {
+	int chance;
 	if (enemy[id].stats.hp <= 0) {
+		if (enemy[id].type == 'R') {
+			message = { "You Kill The Rat" };
+		}
+		else if (enemy[id].type == 'S') {
+			message = { "You Kill The Skeleton" };
+		}
+		else if (enemy[id].type == 'K') {
+			message = { "You Kill The Knight" };
+		}
+		else if (enemy[id].type == 'O') {
+			message = { "You Kill The Ork" };
+		}
+		else {
+			message = { "You Kill The Dragon" };
+		}
 		if (id == 0) {
 			OpenDoors(1);
+			message = { ", The Door Opened" };
 		}
 		if (enemy[id].type == 'D') {
 			OpenDoors(2);
+			message = { ", The Door Opened" };
 		}
-		enemy[id].pos.x = 100;
-		enemy[id].pos.y = 100;
 		link.stats.xp += enemy[id].stats.xp;
-		for (int i = id; i < enemyCount - 1; i++) {
+		chance = rand() % 2;
+		if (chance == 1) {
+			pointOnMap.map[enemy[id].pos.y][enemy[id].pos.x] = 'C';
+			strcat(message.mess, ", And He Drop Coin");
+		}
+		for (int i = id; i < pointOnMap.countNumberOfEnemy - 1; i++) {
 			enemy[i] = enemy[i + 1];
 		}
-		enemyCount--;
+		pointOnMap.countNumberOfEnemy--;
+		enemy = (Enemy*)realloc(enemy, pointOnMap.countNumberOfEnemy * sizeof(Enemy));
 	}
-	return enemyCount;
 }
 void OpenDoors(int flag)
 {
@@ -378,11 +513,11 @@ void SystemOfLevelUps()
 	if (link.stats.xp >= 40 && link.stats.lvl <= 6) {
 		link.stats.xp -= 40;
 		link.stats.lvl++;
-		if (link.stats.hp + link.stats.maxHp / 3 <= link.stats.maxHp) {
-			link.stats.hp += link.stats.maxHp / 3;
+		if (link.stats.hp + link.stats.maxHp <= link.stats.maxHp) {
+			link.stats.hp += link.stats.maxHp;
 		}
 		else {
-			link.stats.hp += link.stats.maxHp / 3 - link.stats.hp;
+			link.stats.hp += link.stats.maxHp - link.stats.hp;
 		}
 	}
 	switch (link.stats.lvl) {
@@ -406,4 +541,27 @@ void SystemOfLevelUps()
 		link.stats.dmg = 18;
 		link.stats.maxHp = 60;
 	}
+}
+void GameOver(int param)
+{
+	rank.countOfCoins = link.countOfCoin;
+	rank.countOfKilledEnemys = 17 - pointOnMap.countNumberOfEnemy;
+	rank.lvl = link.stats.lvl;
+	
+	if (param == 0) {
+		printf("Congratulation");
+		strcpy(rank.gameOver, "Win");
+	}
+	else {
+		printf("You Died");
+		strcpy(rank.gameOver, "Dead");
+	}
+	WriteRank();
+	free(enemy);
+
+	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
+		free(pointOnMap.map[i]);
+	}
+	free(pointOnMap.map);
+
 }

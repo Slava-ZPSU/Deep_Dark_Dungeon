@@ -18,7 +18,8 @@ typedef struct Stats
 
 struct Player
 {
-	int countFood;	
+	int countFood;
+	int countOfCoin;
 	Position pos;	
 	Stats stats;	
 } link;
@@ -28,13 +29,14 @@ struct Enemy
 	char type;		// Enemy symbol
 	Position pos;	
 	Stats stats;	
-} enemy[17];
+} *enemy = NULL;
 
 struct Map
 {
-	char** map;				// Map array
+	char** map = NULL;				// Map array
 	int mapRowSize = 0;		// Y-axis size (row)
 	int mapColSize = 0;		// X-axis size (column)
+	int countNumberOfEnemy = 0;
 }pointOnMap;
 
 struct MapSizes			// This structure is made to simulate the character lighting his way with a torch
@@ -45,21 +47,62 @@ struct MapSizes			// This structure is made to simulate the character lighting h
 	int maxCol;			// The maximum coordinates of the points on the X axis that the player can see
 }newMapSize;
 
-/* Creating map */
-void SetDefaultMapSizes();		// Function for determining map dimensions
-void CreateMap();				// Function for creating a dynamic array for a map
-void FillMap();					// Function that writes a map from a file into a two-dimensional map array
-/* Gameplay */
-void GamePlayProcessing();			// Main function
-void MovePlayer(char movement);		// Player move function
-void PrintMap();					// Output function
+struct Ranking
+{
+	char gameOver[6];
+	char playerName[20];
+	int countOfKilledEnemys;
+	int countOfCoins;
+	int lvl;
+	int countResivetHits = 0;
+} rank, *arrRank;
+
+struct Message
+{
+	char mess[80];
+} message;
+
+int sizeRank = 0;
+
+/* Creating map functions */
+void SetDefaultMapSizes();		
+void CreateMap();				
+void FillMap();					
+void CreateEnemy();
+void SetObjectParameters();
+
+/* Gameplay functions */
+void GamePlayProcessing();
 void SetPlayerVision();				// The function of changing the field of view of the character
-void DyeingSymbols(int i, int j);	// Character coloring function
-void SetObjectParameters();			// Function where structure objects are created
-void MoveEnemy();					// Enemy move function
-void AttackPlayer(int id);
-void AttackEnemy(int id);
-int DeathPlayer();
-int DeathEnemy(int id, int enemyCount);
+void DyeingSymbols(int i, int j);
+void PrintMap();
 void OpenDoors(int flag);
+
+/* Player functions */
+void MovePlayer(char movement);
+void AttackPlayer(int id);
+int DeathPlayer();
 void SystemOfLevelUps();
+void GameOver(int param);
+
+/* Enemy functions */
+void MoveEnemy();
+void AttackEnemy(int id);
+void DeathEnemy(int id);
+
+/* Menu functions */
+void GameMenu();
+void OutputRankingTable();
+void TittleArt();
+void OutputInfo();
+void ChoiceMenu(int x, int y);
+void ReadRank();
+void WriteRank();
+void CreateRank();
+
+/* Frame and Update screen functions */
+void ClearScreen();
+void PrintFrameTop(int lenght);
+void PrintFrameSide();
+void PrintFrameBottom(int lenght);
+void Cursor();
