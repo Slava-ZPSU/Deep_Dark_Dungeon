@@ -442,7 +442,7 @@ void MoveEnemy()
 void AttackPlayer(int id)
 {
 	int chance = rand() % 100; // Chance of a successful attack
-	if (chance < 69) {
+	if (chance < 50) {
 		enemy[id].stats.hp -= link.stats.dmg;
 		if (enemy[id].type == 'R') {
 			message = { "You Hit The Rat" };
