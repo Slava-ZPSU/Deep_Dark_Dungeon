@@ -1,0 +1,21 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║									║
+║		DEEP DARK DUNGEON: The Dungeon Crawler Game		║
+║									║
+║		   Author Of The Idea And Programmer: 			║
+║			  Viacheslav Terletskyi				║
+║									║
+║		  Special Thanks To Author Of The Title Art:		║
+║			     Anastasia Siemko				║
+║									║
+║				Controls:				║
+║	W - Go Up	S - Go Down	A - Go Left	D - Go Right	║
+║			    E - Eating Food				║
+║									║
+║				Map Legend:				║
+║	@ - Player	R - Rat		S - Skeleton	K - Knight	║
+║			O - Orc		D - Dragon			║
+║	# - Wall	~ - Lava	= - Open Door	+ - Close Door	║
+║	. - Floor       F - Food        C - Coin  	G - Gold	║
+║									║
+╚═══════════════════════════════════════════════════════════════════════╝

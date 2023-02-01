@@ -33,18 +33,18 @@ struct Enemy
 
 struct Map
 {
-	char** map = NULL;				// Map array
-	int mapRowSize = 0;		// Y-axis size (row)
-	int mapColSize = 0;		// X-axis size (column)
+	char** map = NULL;		
+	int mapRowSize = 0;		
+	int mapColSize = 0;		
 	int countNumberOfEnemy = 0;
 }pointOnMap;
 
 struct MapSizes			// This structure is made to simulate the character lighting his way with a torch
 {
-	int minRow = 0;		// The minimum Y-axis coordinates of the points that the player can see
-	int minCol = 0;		// The minimum coordinates of the points on the X axis that the player can see
-	int maxRow;			// The maximum coordinates of the points along the Y axis that the player can see
-	int maxCol;			// The maximum coordinates of the points on the X axis that the player can see
+	int minRow = 0;		
+	int minCol = 0;		
+	int maxRow;			
+	int maxCol;			
 }newMapSize;
 
 struct Ranking
@@ -55,7 +55,9 @@ struct Ranking
 	int countOfCoins;
 	int lvl;
 	int countResivetHits = 0;
-} rank, *arrRank;
+	float time;
+	int score = 0;
+} rank, *arrRank = NULL;
 
 struct Message
 {
@@ -98,10 +100,12 @@ void OutputInfo();
 void ChoiceMenu(int x, int y);
 void ReadRank();
 void WriteRank();
+void SortRank();
 void CreateRank();
 
 /* Frame and Update screen functions */
 void ClearScreen();
+void HideCursor();
 void PrintFrameTop(int lenght);
 void PrintFrameSide();
 void PrintFrameBottom(int lenght);

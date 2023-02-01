@@ -41,6 +41,7 @@ void GameMenu()
 				ReadRank();
 				printf("\n\n\n\t\t\tEnter Your Name: ");	scanf("%s", rank.playerName);
 				system("cls");
+				FillMap();
 				GamePlayProcessing();
 				
 				system("cls");
@@ -109,24 +110,42 @@ void TittleArt()
 void OutputRankingTable()
 {
 	FILE* fp = fopen("RankingTable.txt", "r");
-	char ch;
 
 	if (fgetc(fp) == EOF) {
-		printf("The Rank Table Is Empty\nSo Start Playing\n");
+		printf("___________.__             __________               __     ___________     ___.   .__           .___         ___________               __             \n");
+		printf("\\__    ___/|  |__   ____   \\______   \\____    ____ |  | __ \\__    ___/____ \\_ |__ |  |   ____   |   | ______ \\_   _____/ _____ _______/  |_ ___.__.    \n");
+		printf("  |    |   |  |  \\_/ __ \\   |       _|__  \\  /    \\|  |/ /   |    |  \\__  \\ | __ \\|  | _/ __ \\  |   |/  ___/  |    __)_ /     \\\\____ \\   __<   |  |  \n");
+		printf("  |    |   |   Y  \\  ___/   |    |   \\/ __ \\|   |  \\    <    |    |   / __ \\| \\_\\ \\  |_\\  ___/  |   |\\___ \\   |        \\  Y Y  \\  |_> >  |  \\___  | \n");
+		printf("  |____|   |___|  /\\___  >  |____|_  (____  /___|  /__|_ \\   |____|  (____  /___  /____/\\___  > |___/____  > /_______  /__|_|  /   __/|__|  / ____|\n");
+		printf("                \\/     \\/          \\/     \\/     \\/     \\/                \\/    \\/          \\/           \\/          \\/      \\/|__| \n");
+		printf("  _________          _________ __                 __    __________.__                .__                  \n");
+		printf(" /   _____/ ____    /   _____//  |______ ________/  |_  \\______   \\  | _____  ___.__.|__| ____    ____    \n");
+		printf(" \\_____  \\ /  _ \\   \\_____  \\\\   __\\__  \\\\_  __ \\   __\\  |     ___/  | \\__  \\<   |  ||  |/    \\  / ___\\   \n");
+		printf(" /        (  <_> )  /        \\|  |  / __ \\|  | \\/|  |    |    |   |  |__/ __ \\___  ||  |   |  \\/ /_/  >  \n");
+		printf("/_______  /\\____/  /_______  /|__| (____  /__|   |__|    |____|   |____(____  / ____||__|___|  /\\___  /   \n");
+		printf("        \\/                 \\/           \\/                                  \\/\\/             \\//_____/    \n");
 		system("pause");
 	}
 
 	/* the process of calculating map dimensions */
 	else {
+		SortRank();
+		printf("\t\t\t\t");		PrintFrameTop(50);		printf("\t\t\t\t");	
+		PrintFrameSide();	printf("\t\t   RANKING TABLE\t\t   ");	PrintFrameSide();
+		printf("\n\t\t\t\t");		PrintFrameBottom(50);
 		for (int i = 0; i < sizeRank; i++)
 		{
-			printf("=============================================");
-			printf("\nGame Over: %s", arrRank[i].gameOver);
-			printf("\nPlayer Name: %s ", arrRank[i].playerName);
-			printf("\nPlayer level: %d", arrRank[i].lvl);
-			printf("\nThe Number Of Killed Enemys: %d", arrRank[i].countOfKilledEnemys);
-			printf("\nThe Number Of Hits Received : %d", arrRank[i].countResivetHits);
-			printf("\nThe Number Of Coins: %d\n", arrRank[i].countOfCoins);
+			printf("\t\t\t\t");		PrintFrameTop(50);		printf("\t\t\t\t");
+			PrintFrameSide();	printf("Game Over:                   %21s", arrRank[i].gameOver);				PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("Player Name:                 %21s", arrRank[i].playerName);				PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("Player level:                %21d", arrRank[i].lvl);					PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("The Number Of Killed Enemys: %21d", arrRank[i].countOfKilledEnemys);	PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("The Number Of Hits Received: %21d", arrRank[i].countResivetHits);		PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("The Number Of Coins:         %21d", arrRank[i].countOfCoins);			PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("The passage time:            %21.2f", arrRank[i].time);					PrintFrameSide();	printf("\n\t\t\t\t\t\t\t");
+			PrintFrameSide();	printf("The Total Number Of Points:  %21d", arrRank[i].score);					PrintFrameSide();	printf("\n\t\t\t\t");
+			
+			PrintFrameBottom(50);
 		}
 		system("pause");
 	}
@@ -195,4 +214,16 @@ void CreateRank()
 {
 	FILE* fp = fopen("RankingTable.txt", "w");
 	fclose(fp);
+}
+
+void SortRank()
+{
+	Ranking tmp;
+	for (int i = 0; i < sizeRank; i++) {
+		tmp = arrRank[i];
+		for (int j = i - 1; j >= 0 && arrRank[j].score < tmp.score; j--) {
+			arrRank[j + 1] = arrRank[j];
+			arrRank[j] = tmp;
+		}
+	}
 }

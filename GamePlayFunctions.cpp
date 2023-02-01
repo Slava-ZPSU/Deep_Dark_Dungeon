@@ -13,17 +13,22 @@
 
 int main()
 {
-	//SetConsoleCP(CP_UTF8);	SetConsoleOutputCP(CP_UTF8);
 	srand(time(NULL));
+	HideCursor();
+	SetDefaultMapSizes();
 
 	GameMenu();
 	free(arrRank);
+	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
+		free(pointOnMap.map[i]);
+	}
+	free(pointOnMap.map);
 	return 0;
 }
 
 void SetDefaultMapSizes()
 {
-	char ch;	// A variable that is needed to accurately count the number of rows and columns
+	char ch;	
 	FILE* fp = fopen("DungeonMap.txt", "r");
 	
 	/* Integrity check */
@@ -42,7 +47,7 @@ void SetDefaultMapSizes()
 	}
 	
 	fclose(fp);	
-	CreateMap();	// Creating array
+	CreateMap();
 }
 void CreateMap()
 {
@@ -50,7 +55,6 @@ void CreateMap()
 	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
 		pointOnMap.map[i] = (char*)malloc(sizeof(char) * pointOnMap.mapColSize);
 	}
-	FillMap(); // Filling the array
 }
 void FillMap()
 {
@@ -77,6 +81,7 @@ void FillMap()
 }
 void CreateEnemy()
 {
+	pointOnMap.countNumberOfEnemy = 0;
 	for (int i = 0; i < pointOnMap.mapRowSize; i++)
 	{
 		for (int j = 0; j < pointOnMap.mapColSize; j++) {
@@ -95,13 +100,22 @@ void ClearScreen()
 	coord.Y = 0;
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
+void HideCursor()
+{
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_CURSOR_INFO info;
+	info.dwSize = 100;
+	info.bVisible = FALSE;
+	SetConsoleCursorInfo(consoleHandle, &info);
+}
 
 void GamePlayProcessing()
 {	
 	int deathFlag = 0;
-	SetDefaultMapSizes();
-	SetObjectParameters();	// Creation of objects
-
+	
+	SetObjectParameters();
+	clock_t start, finish;
+	start = clock();
 	do
 	{
 		SystemOfLevelUps();
@@ -110,10 +124,12 @@ void GamePlayProcessing()
 
 		ClearScreen();
 	
-		MovePlayer((char)tolower(_getch()));					// Reading the player's direction of movement
+		MovePlayer((char)tolower(_getch()));				
 		MoveEnemy();
 		deathFlag = DeathPlayer();
-	} while ((link.pos.y != 14 || link.pos.x != 25) && deathFlag == 0);		// To complete the game, you need to reach the treasures
+	} while ((link.pos.y != 14 || link.pos.x != 27) && deathFlag == 0);	
+	finish = clock();
+	rank.time = (float)(finish - start) / CLOCKS_PER_SEC;
 	GameOver(deathFlag);
 }
 
@@ -126,7 +142,7 @@ void SetObjectParameters()
 	int xp = NULL;
 
 	/* Player */
-	link = { 1, 0, 35, 13, 5, 10, 10, 1, 0 };
+	link = { 1, 0, 37, 13, 5, 10, 10, 1, 0 };
 	
 	/* Enemys */
 	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
@@ -135,7 +151,7 @@ void SetObjectParameters()
 				if (pointOnMap.map[i][j] == 'K') {
 					type = 'K';
 					dmg = 4;
-					hp = 40;
+					hp = 35;
 					xp = 20;
 				}	
 				else if (pointOnMap.map[i][j] == 'S') {
@@ -146,8 +162,8 @@ void SetObjectParameters()
 				}
 				else if (pointOnMap.map[i][j] == 'O') {
 					type = 'O';
-					dmg = 6;
-					hp = 60;
+					dmg = 4;
+					hp = 50;
 					xp = 10;
 				}
 				else if (pointOnMap.map[i][j] == 'R') {
@@ -159,7 +175,7 @@ void SetObjectParameters()
 				else {
 					type = 'D';
 					dmg = 10;
-					hp = 100;
+					hp = 80;
 				}
 				
 				enemy[id] = { type, j, i, dmg, hp };
@@ -173,7 +189,7 @@ void DyeingSymbols(int i, int j)
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	/* Coloring characters */
+	/* Coloring symbols */
 	if (pointOnMap.map[i][j] == '@') {
 		printf("\033[0;36m");
 	}
@@ -183,7 +199,7 @@ void DyeingSymbols(int i, int j)
 	else if (pointOnMap.map[i][j] == 'D') {
 		SetConsoleTextAttribute(hConsole, 2);
 	}
-	else if (pointOnMap.map[i][j] == 'G') {
+	else if (pointOnMap.map[i][j] == 'G' || pointOnMap.map[i][j] == 'C') {
 		SetConsoleTextAttribute(hConsole, 6);
 	}
 	else if (pointOnMap.map[i][j] == '.') {
@@ -221,7 +237,7 @@ void PrintMap()
 
 	SetPlayerVision();	// Change the character's viewport
 
-	/* Output map in console */
+	/* Printing Messages */
 	PrintFrameTop(95);
 	PrintFrameSide();
 	if (strcmp(message.mess, "\0") == 1) {
@@ -233,6 +249,7 @@ void PrintMap()
 	PrintFrameSide();	printf("\n");
 	PrintFrameBottom(95);
 
+	/* Output map in console */
 	printf("\t\t\t\t\t");
 	PrintFrameTop(14);
 	printf("\t\t\t\t\t");
@@ -259,7 +276,7 @@ void PrintMap()
 	}
 
 	PrintFrameBottom(14);
-	
+	/* Printing Player Characteristics */
 	PrintFrameTop(95);
 	PrintFrameSide();
 	if (link.stats.hp < 10) {
@@ -279,8 +296,7 @@ void MovePlayer(char movement)
 	int row = link.pos.y;
 	int col = link.pos.x;
 	int value = 0;
-	char notice[50];
-	pointOnMap.map[link.pos.y][link.pos.x] = '.';		// The character has moved to a new position, so the floor occupies the previous position
+	pointOnMap.map[link.pos.y][link.pos.x] = '.';	
 
 	/* The process of character movement */
 	switch (movement) {
@@ -307,15 +323,15 @@ void MovePlayer(char movement)
 	case 'e':
 		if (link.countFood > 0) {
 			link.countFood--;
-			if (link.stats.hp + 5 <= link.stats.maxHp) {
-				link.stats.hp += 5;
+			if (link.stats.hp + 10 <= link.stats.maxHp) {
+				link.stats.hp += 10;
 			}
 			else {
 				link.stats.hp += link.stats.maxHp - link.stats.hp;
 			}
 		}
 	}
-
+	Beep(150, 100);
 	/* Check if the next cell is not a door */
 	if (pointOnMap.map[link.pos.y][link.pos.x] == '=') {
 		/* Going through the door */
@@ -336,6 +352,7 @@ void MovePlayer(char movement)
 	if (pointOnMap.map[link.pos.y][link.pos.x] == 'F') {
 		link.countFood++;
 		message = { "You Picked Up The Food" };
+		Beep(300, 100);
 	}
 
 	if (pointOnMap.map[link.pos.y][link.pos.x] == 'C') {
@@ -353,6 +370,7 @@ void MovePlayer(char movement)
 			message = { "You Picked Up 10 Coin" };
 			link.countOfCoin += 10;
 		}
+		Beep(400, 100);
 	}
 
 	for (int i = 0; i < pointOnMap.countNumberOfEnemy; i++) {
@@ -360,18 +378,19 @@ void MovePlayer(char movement)
 			AttackPlayer(i);
 			link.pos.x = col;
 			link.pos.y = row;
+			Beep(100, 100);
 		}
 	}
-	pointOnMap.map[link.pos.y][link.pos.x] = '@';	// The character has moved to a new position
+	pointOnMap.map[link.pos.y][link.pos.x] = '@';	
 }
 void MoveEnemy()
 {
-	int enemyRadius = 6;	// enemy vision radius
-	int dx;					// delta column
-	int dy;					// delta row
+	int enemyRadius = 6;	
+	int dx;					
+	int dy;					
 	int row;
 	int col;
-
+	/* Enemy Movement */
 	for (int i = 0; i < pointOnMap.countNumberOfEnemy; i++) {
 		dx = enemy[i].pos.x - link.pos.x;
 		dy = enemy[i].pos.y - link.pos.y;
@@ -379,7 +398,7 @@ void MoveEnemy()
 		col = enemy[i].pos.x;
 
 		pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x] = '.';
-
+		/* Determining whether a player is in sight */
 		if (sqrt(dx * dx + dy * dy) <= enemyRadius) {
 			if (enemy[i].pos.y < link.pos.y && pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '.' || pointOnMap.map[enemy[i].pos.y + 1][enemy[i].pos.x] == '@' ) {
 				enemy[i].pos.y++;
@@ -394,6 +413,7 @@ void MoveEnemy()
 				enemy[i].pos.x--;
 			}
 		}
+		/* Determine if there are no doors ahead of the enemy*/
 		if (pointOnMap.map[enemy[i].pos.y - 1][enemy[i].pos.x] == '=') {
 			enemy[i].pos.y++;
 		}
@@ -406,6 +426,7 @@ void MoveEnemy()
 		else if (pointOnMap.map[enemy[i].pos.y][enemy[i].pos.x + 1] == '=') {
 			enemy[i].pos.x--;
 		}
+		/* Determining whether there is a player ahead of the enemy */
 		if (enemy[i].pos.x == link.pos.x && enemy[i].pos.y == link.pos.y) {
 			AttackEnemy(i);
 			enemy[i].pos.x = col;
@@ -420,8 +441,8 @@ void MoveEnemy()
 }
 void AttackPlayer(int id)
 {
-	int chance = rand() % 101; // Chance of a successful attack
-	if (chance < 51) {
+	int chance = rand() % 100; // Chance of a successful attack
+	if (chance < 69) {
 		enemy[id].stats.hp -= link.stats.dmg;
 		if (enemy[id].type == 'R') {
 			message = { "You Hit The Rat" };
@@ -445,7 +466,7 @@ void AttackPlayer(int id)
 }
 void AttackEnemy(int id)
 {
-	int chance = rand() % 101; // Chance of a successful attack
+	int chance = rand() % 100; // Chance of a successful attack
 	if (chance > 49) {
 		link.stats.hp -= enemy[id].stats.dmg;
 		strcat(message.mess, ", And You Get Damage");
@@ -502,10 +523,10 @@ void DeathEnemy(int id)
 void OpenDoors(int flag)
 {
 	if (flag == 1) {
-		pointOnMap.map[5][32] = '=';
+		pointOnMap.map[5][34] = '=';
 	}
 	if (flag == 2) {
-		pointOnMap.map[22][27] = '=';
+		pointOnMap.map[22][29] = '=';
 	}
 }
 void SystemOfLevelUps()
@@ -513,7 +534,7 @@ void SystemOfLevelUps()
 	if (link.stats.xp >= 40 && link.stats.lvl <= 6) {
 		link.stats.xp -= 40;
 		link.stats.lvl++;
-		if (link.stats.hp + link.stats.maxHp <= link.stats.maxHp) {
+		if (link.stats.hp + link.stats.maxHp <= link.stats.maxHp + 7) {
 			link.stats.hp += link.stats.maxHp;
 		}
 		else {
@@ -547,21 +568,59 @@ void GameOver(int param)
 	rank.countOfCoins = link.countOfCoin;
 	rank.countOfKilledEnemys = 17 - pointOnMap.countNumberOfEnemy;
 	rank.lvl = link.stats.lvl;
-	
+
+	system("cls");
 	if (param == 0) {
-		printf("Congratulation");
+		_setmode(_fileno(stdout), _O_U16TEXT);
+		wprintf(L"\033[0;35m\n\n                   ▄████████  ▄██████▄  ███▄▄▄▄      ▄██████▄     ▄████████    ▄████████     ███     ███    █▄   ▄█          ▄████████     ███      ▄█   ▄██████▄  ███▄▄▄▄                               \n");
+		wprintf(L"                  ███    ███ ███    ███ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███ ▀█████████▄ ███    ███ ███         ███    ███ ▀█████████▄ ███  ███    ███ ███▀▀▀██▄                             \n");
+		wprintf(L"                  ███    █▀  ███    ███ ███   ███   ███    █▀    ███    ███   ███    ███    ▀███▀▀██ ███    ███ ███         ███    ███    ▀███▀▀██ ███▌ ███    ███ ███   ███                             \n");
+		wprintf(L"                  ███        ███    ███ ███   ███  ▄███         ▄███▄▄▄▄██▀   ███    ███     ███   ▀ ███    ███ ███         ███    ███     ███   ▀ ███▌ ███    ███ ███   ███                             \n");
+		wprintf(L"                  ███        ███    ███ ███   ███ ▀▀███ ████▄  ▀▀███▀▀▀▀▀   ▀███████████     ███     ███    ███ ███       ▀███████████     ███     ███▌ ███    ███ ███   ███                             \n");
+		wprintf(L"                  ███    █▄  ███    ███ ███   ███   ███    ███ ▀███████████   ███    ███     ███     ███    ███ ███         ███    ███     ███     ███  ███    ███ ███   ███                             \n");
+		wprintf(L"                  ███    ███ ███    ███ ███   ███   ███    ███   ███    ███   ███    ███     ███     ███    ███ ███▌    ▄   ███    ███     ███     ███  ███    ███ ███   ███                             \n");
+		wprintf(L"                  ████████▀   ▀██████▀   ▀█   █▀    ████████▀    ███    ███   ███    █▀     ▄████▀   ████████▀  █████▄▄██   ███    █▀     ▄████▀   █▀    ▀██████▀   ▀█   █▀                              \n");
+		wprintf(L"                                                                 ███    ███                                     ▀                                                                                        \n\n");
+		wprintf(L"\033[0;31m     ▄██   ▄    ▄██████▄  ███    █▄         ▄█   ▄█▄  ▄█   ▄█        ▄█               ███        ▄█    █▄       ▄████████     ████████▄     ▄████████    ▄████████    ▄██████▄   ▄██████▄  ███▄▄▄▄       \n");
+		wprintf(L"     ███   ██▄ ███    ███ ███    ███       ███ ▄███▀ ███  ███       ███           ▀█████████▄   ███    ███     ███    ███     ███   ▀███   ███    ███   ███    ███   ███    ███ ███    ███ ███▀▀▀██▄     \n");
+		wprintf(L"     ███▄▄▄███ ███    ███ ███    ███       ███▐██▀   ███▌ ███       ███              ▀███▀▀██   ███    ███     ███    █▀      ███    ███   ███    ███   ███    ███   ███    █▀  ███    ███ ███   ███     \n");
+		wprintf(L"     ▀▀▀▀▀▀███ ███    ███ ███    ███      ▄█████▀    ███▌ ███       ███               ███   ▀  ▄███▄▄▄▄███▄▄  ▄███▄▄▄         ███    ███  ▄███▄▄▄▄██▀   ███    ███  ▄███        ███    ███ ███   ███     \n");
+		wprintf(L"     ▄██   ███ ███    ███ ███    ███     ▀▀█████▄    ███▌ ███       ███               ███     ▀▀███▀▀▀▀███▀  ▀▀███▀▀▀         ███    ███ ▀▀███▀▀▀▀▀   ▀███████████ ▀▀███ ████▄  ███    ███ ███   ███     \n");
+		wprintf(L"     ███   ███ ███    ███ ███    ███       ███▐██▄   ███  ███       ███               ███       ███    ███     ███    █▄      ███    ███ ▀███████████   ███    ███   ███    ███ ███    ███ ███   ███     \n");
+		wprintf(L"     ███   ███ ███    ███ ███    ███       ███ ▀███▄ ███  ███▌    ▄ ███▌    ▄         ███       ███    ███     ███    ███     ███   ▄███   ███    ███   ███    ███   ███    ███ ███    ███ ███   ███     \n");
+		wprintf(L"      ▀█████▀   ▀██████▀  ████████▀        ███   ▀█▀ █▀   █████▄▄██ █████▄▄██        ▄████▀     ███    █▀      ██████████     ████████▀    ███    ███   ███    █▀    ████████▀   ▀██████▀   ▀█   █▀      \n");
+		wprintf(L"                                           ▀              ▀         ▀                                                                      ███    ███                                                    \n\n");
+		wprintf(L"\033[0;33m             ▄████████ ███▄▄▄▄   ████████▄         ▄████████  ▄█  ███▄▄▄▄   ████████▄          ███        ▄████████    ▄████████    ▄████████    ▄████████ ███    █▄     ▄████████    ▄████████ \n");
+		wprintf(L"            ███    ███ ███▀▀▀██▄ ███   ▀███       ███    ███ ███  ███▀▀▀██▄ ███   ▀███     ▀█████████▄   ███    ███   ███    ███   ███    ███   ███    ███ ███    ███   ███    ███   ███    ███ \n");
+		wprintf(L"            ███    ███ ███   ███ ███    ███       ███    █▀  ███▌ ███   ███ ███    ███        ▀███▀▀██   ███    ███   ███    █▀    ███    ███   ███    █▀  ███    ███   ███    ███   ███    █▀  \n");
+		wprintf(L"            ███    ███ ███   ███ ███    ███      ▄███▄▄▄     ███▌ ███   ███ ███    ███         ███   ▀  ▄███▄▄▄▄██▀  ▄███▄▄▄       ███    ███   ███        ███    ███  ▄███▄▄▄▄██▀  ▄███▄▄▄     \n");
+		wprintf(L"          ▀███████████ ███   ███ ███    ███     ▀▀███▀▀▀     ███▌ ███   ███ ███    ███         ███     ▀▀███▀▀▀▀▀   ▀▀███▀▀▀     ▀███████████ ▀███████████ ███    ███ ▀▀███▀▀▀▀▀   ▀▀███▀▀▀     \n");
+		wprintf(L"            ███    ███ ███   ███ ███    ███       ███        ███  ███   ███ ███    ███         ███     ▀███████████   ███    █▄    ███    ███          ███ ███    ███ ▀███████████   ███    █▄  \n");
+		wprintf(L"            ███    ███ ███   ███ ███   ▄███       ███        ███  ███   ███ ███   ▄███         ███       ███    ███   ███    ███   ███    ███    ▄█    ███ ███    ███   ███    ███   ███    ███ \n");
+		wprintf(L"            ███    █▀   ▀█   █▀  ████████▀        ███        █▀    ▀█   █▀  ████████▀         ▄████▀     ███    ███   ██████████   ███    █▀   ▄████████▀  ████████▀    ███    ███   ██████████ \n");
+		wprintf(L"                                                                                                         ███    ███                                                     ███    ███              \n");
+		_setmode(_fileno(stdout), _O_TEXT);
 		strcpy(rank.gameOver, "Win");
+		rank.score = rank.countOfCoins * 5 + rank.countOfKilledEnemys * 10 + rank.lvl * 3 + link.countFood * 6 + 1000;
 	}
 	else {
-		printf("You Died");
+		_setmode(_fileno(stdout), _O_U16TEXT);
+		wprintf(L"\033[0;31m\n\n\t\t▓██   ██▓ ▒█████   █    ██    ▓█████▄  ██▓▓█████ ▓█████▄ \n");
+		wprintf(L"\t\t ▒██  ██▒▒██▒  ██▒ ██  ▓██▒   ▒██▀ ██▌▓██▒▓█   ▀ ▒██▀ ██▌\n");
+		wprintf(L"\t\t  ▒██ ██░▒██░  ██▒▓██  ▒██░   ░██   █▌▒██▒▒███   ░██   █▌\n");
+		wprintf(L"\t\t  ░ ▐██▓░▒██   ██░▓▓█  ░██░   ░▓█▄   ▌░██░▒▓█  ▄ ░▓█▄   ▌\n");
+		wprintf(L"\t\t  ░ ██▒▓░░ ████▓▒░▒▒█████▓    ░▒████▓ ░██░░▒████▒░▒████▓ \n");
+		wprintf(L"\t\t   ██▒▒▒ ░ ▒░▒░▒░ ░▒▓▒ ▒ ▒     ▒▒▓  ▒ ░▓  ░░ ▒░ ░ ▒▒▓  ▒ \n");
+		wprintf(L"\t\t ▓██ ░▒░   ░ ▒ ▒░ ░░▒░ ░ ░     ░ ▒  ▒  ▒ ░ ░ ░  ░ ░ ▒  ▒ \n");
+		wprintf(L"\t\t ▒ ▒ ░░  ░ ░ ░ ▒   ░░░ ░ ░     ░ ░  ░  ▒ ░   ░    ░ ░  ░ \n");
+		wprintf(L"\t\t ░ ░         ░ ░     ░           ░     ░     ░  ░   ░    \n");
+		wprintf(L"\t\t ░ ░                           ░                  ░      \n");
+		_setmode(_fileno(stdout), _O_TEXT);
 		strcpy(rank.gameOver, "Dead");
+		rank.score = rank.countOfCoins * 5 + rank.countOfKilledEnemys * 10 + rank.lvl * 3 + link.countFood * 6;
 	}
+	SortRank();
 	WriteRank();
 	free(enemy);
-
-	for (int i = 0; i < pointOnMap.mapRowSize; i++) {
-		free(pointOnMap.map[i]);
-	}
-	free(pointOnMap.map);
-
+	system("pause");
 }
